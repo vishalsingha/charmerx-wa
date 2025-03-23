@@ -12,7 +12,7 @@ class ChatConversationManager:
         self.invalid_img_template = "BKL chat/dating profile ya phir ladki i photo upload krr."
 
     def is_valid_contact(self, msg):
-        sender = msg.form.get('From') 
+        sender = msg.get('From') 
         curr_number = sender.replace('whatsapp:+', '')
         if curr_number in self.paid_contacts:
             return True
@@ -26,11 +26,11 @@ class ChatConversationManager:
     
     def handle_conversation(self, msg, history):
         if self.is_valid_contact(msg):
-            sender = msg.form.get('From') 
-            message_id = msg.form.get('SmsMessageSid')  
-            media_url = msg.form.get('MediaUrl0') 
+            sender = msg.get('From') 
+            message_id = msg.get('SmsMessageSid')  
+            media_url = msg.get('MediaUrl0') 
             whatsapp_number = sender.replace('whatsapp:+', '') 
-            text_msg = msg.form.get('Body') 
+            text_msg = msg.get('Body') 
             base64img = None
             valid_img_flag = self.validate_img_quality(base64img)
 

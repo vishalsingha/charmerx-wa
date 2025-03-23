@@ -50,7 +50,7 @@ class MongoDBStorage:
         :param message_data: Dictionary containing message details
         """
         try:
-            transformed_data = message_data.form.to_dict().copy()
+            transformed_data = message_data.copy()
 
             if 'ProfileName' in transformed_data:
                 del transformed_data['ProfileName']
@@ -75,7 +75,7 @@ class MongoDBStorage:
 
         try:
             recent_messages = list(self.collection.find({"From": user_id})
-                                   .sort("timestamp", pymongo.DESCENDING)
+                                   .sort("timestamp", pymongo.ASCENDING)
                                    .limit(3))
             return recent_messages
 

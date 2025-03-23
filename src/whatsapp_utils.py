@@ -26,17 +26,17 @@ class WhatsappUtils:
         else:
             return None, None, None
         
-    def save_media(self, request):
+    def save_media(self, msg):
 
-        whatsapp_number = request.form.get('From').replace('whatsapp:+', '') 
-        message_id = request.form.get('SmsMessageSid')  # Unique message ID
-        media_url = request.form.get('MediaUrl0')  # Media URL
+        whatsapp_number = msg.get('From').replace('whatsapp:+', '') 
+        message_id = msg.get('SmsMessageSid')  # Unique message ID
+        media_url = msg.get('MediaUrl0')  # Media URL
     
-        content_type = request.form.get('MediaContentType0')  # Media type
+        content_type = msg.get('MediaContentType0')  # Media type
         ext = content_type.split('/')[1]  # Extract file extension
 
         _, _, media_id = self.parse_twilio_media_url(media_url)
-        r = requests.get(media_url)
+        r = msg.get(media_url)
         
         
 

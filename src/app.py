@@ -1,39 +1,43 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, request
+from fastapi import FastAPI, Request, Form 
+from fastapi.responses import Response
+from pydantic import BaseModel
 from mongo_utils import MongoDBStorage
 from whatsapp_utils import WhatsappUtils
 from conv_utils import ChatConversationManager
+import uvicorn
 
 source_code_location = os.path.dirname(os.path.abspath(__file__))
 
-
 load_dotenv()
 
-
-app = Flask(__name__)
+app = FastAPI()
 db_storage = MongoDBStorage()
 wa_utils = WhatsappUtils()
 chat_manager = ChatConversationManager()
 
 
-@app.route('/whatsapp', methods=['POST'])
-def reply():
+@app.post('/whatsapp')
+async def reply(request: Request):
 
-    print(request.form.to_dict())
+    form_data = await request.form()
+    form_dict = dict(form_data)
 
-    sender = request.form.get('From') 
+    sender = form_dict.get('From') 
     sender_history = db_storage.get_user_history(sender)
 
-    
-    msg_response = chat_manager.handle_conversation(request, sender_history)
-    db_storage.store_message(request, msg_response)
-    return wa_utils.respond(msg_response)
+    msg_response = chat_manager.handle_conversation(form_dict, sender_history)
+    db_storage.store_message(form_dict, msg_response)
 
-
+    cx_reply = wa_utils.respond(msg_response)
+    return Response(content=cx_reply, media_type="application/xml")
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=5005)
+
+
+
 
 
 

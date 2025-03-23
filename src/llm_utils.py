@@ -18,17 +18,17 @@ class ResponseSuggestor:
     def __init__(self):
         self.system = system_prompt1
 
-    def prepare_single_message(self, msg_dict):
+    def prepare_single_message(self, msg):
         content = []
-        if msg_dict.get('Body'):
-            content.append({"type" : "text", "text" : msg_dict.get('Body')})
-        if msg_dict.get('MediaUrl0'):
-            content.append({"type": "image_url", "image_url": {"url": msg_dict.get('MediaUrl0'), "detail": "auto"}})
+        if msg.get('Body'):
+            content.append({"type" : "text", "text" : msg.get('Body')})
+        if msg.get('MediaUrl0'):
+            content.append({"type": "image_url", "image_url": {"url": msg.get('MediaUrl0'), "detail": "auto"}})
 
         message = [{"role" : "user", "content" : content}]
 
-        if msg_dict.get('cx_reply'):
-            message.append({"role" : "assistant", "content" : msg_dict.get('cx_reply')})
+        if msg.get('cx_reply'):
+            message.append({"role" : "assistant", "content" : msg.get('cx_reply')})
 
         return message
 
@@ -39,7 +39,7 @@ class ResponseSuggestor:
         for h in history:
             message+=self.prepare_single_message(h)
 
-        message+=self.prepare_single_message(msg.form.to_dict())
+        message+=self.prepare_single_message(msg)
         return message
 
 
