@@ -23,7 +23,7 @@ async def reply(request: Request):
 
     form_data = await request.form()
     form_dict = dict(form_data)
-
+    print(form_dict)
     sender = form_dict.get('From') 
     sender_history = db_storage.get_user_history(sender)
 

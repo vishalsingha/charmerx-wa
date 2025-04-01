@@ -1,4 +1,5 @@
 import os
+import time
 import pymongo
 from datetime import datetime
 from dotenv import load_dotenv
@@ -59,6 +60,7 @@ class MongoDBStorage:
             if 'ApiVersion' in transformed_data:
                 del transformed_data['ApiVersion']
             transformed_data['cx_reply'] = cx_reply
+            transformed_data['timestamp'] = time.time()
             # Insert the document
             result = self.collection.insert_one(transformed_data)
             print(f"[INFO] : Message stored with ID: {result.inserted_id}")

@@ -1,5 +1,4 @@
 
-
 import re
 import os
 import requests
@@ -36,7 +35,7 @@ class WhatsappUtils:
         ext = content_type.split('/')[1]  # Extract file extension
 
         _, _, media_id = self.parse_twilio_media_url(media_url)
-        r = msg.get(media_url)
+        r = requests.get(media_url)
         
         
 
@@ -60,5 +59,4 @@ class WhatsappUtils:
         response = MessagingResponse()
         response.message(message)
         return str(response)
-    
     
