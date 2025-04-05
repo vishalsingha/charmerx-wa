@@ -11,7 +11,7 @@ import uvicorn
 source_code_location = os.path.dirname(os.path.abspath(__file__))
 
 load_dotenv()
-
+ 
 app = FastAPI()
 db_storage = MongoDBStorage()
 wa_utils = WhatsappUtils()

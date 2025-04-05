@@ -7,7 +7,7 @@ from mistralai import Mistral
 
 # Set your OpenAI API key here
 API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key = API_KEY)
+client = OpenAI(api_key = API_KEY, base_url="https://api.anthropic.com/v1/")
 
 
 
@@ -45,6 +45,18 @@ class ChatSuggestions(BaseModel):
     suggestion3: str = Field(..., description=suggestion3_prompt)
 
 
+response_type = '''
+Output Format : 
+- (Sweet) : Craft a short, witty, and engaging response that directly references details from the screenshot/text. Use a mix of playfulness, humour, sarcasm, teasing, or cleverness to make it feel personal and engaging.</sweet_response>
+- (Cool) : Continue the interaction with a short response that builds on the previous statement naturally. Possible tones: playful, teasing, flirty, clever. Incorporate elements of curiosity, surprise, or challenge.</cool_response>
+- (Spicy) : Craft an attractive, charming, and concise reply that smoothly transitions the conversation towards a date or an engaging new topic. Use a mix of humor, intrigue, or confident charm to make the shift feel effortless and exciting.  \n\n- If the moment feels right, seamlessly incorporate a flirty yet natural ask-out.  \n- If not, initiate a fresh topic with a playful or intriguing hook that keeps the conversation flowing.  \n- Keep it short, clever, and engaging—avoid forced or overly generic transitions.</spicy_response>
+- (CharmerX) Best replies possibles combining all the above responses. 
+
+Don't output anything other than this.
+'''
+
+# ChatSuggestions
+
 # class ChatSuggestions(BaseModel):
 #     suggestion1: str = Field(..., description="A kind, empathetic reply that ends with a hook or follow-up question.")
 #     suggestion2: str = Field(..., description="A witty, humorous response that may include mild playful sarcasm if it enhances confidence and coolness. Not flirty or suggestive.")
@@ -79,10 +91,10 @@ class ResponseSuggestor:
         if msg.get('Body'):
             content.append({"type" : "text", "text" : msg.get('Body')})
         if msg.get('MediaUrl0'):
-            content.append({"type": "image_url", "image_url": {"url": msg.get('MediaUrl0'), "detail": "high"}})
+            content.append({"type": "image_url", "image_url": {"url": msg.get('MediaUrl0'), "detail": "low"}})
 
-        if msg.get('transcript'):
-            content.append({"type" : "text", "text" : f"Here is the transcript for the image : {msg.get('transcript')}"})
+        # if msg.get('transcript'):
+        #     content.append({"type" : "text", "text" : f"Here is the transcript for the image : {msg.get('transcript')}"})
 
         message = [{"role" : "user", "content" : content}]
 
@@ -93,12 +105,15 @@ class ResponseSuggestor:
 
     def prepare_llm_message(self, msg, history):
 
-        message = [{"role" : "system", "content" : grok_system_prompt}]
+        message = [{"role" : "system", "content" : grok_system_prompt + f'\n\n{response_type}'}]
 
-        for h in history:
-            message+=self.prepare_single_message(h)
 
-        message+=self.prepare_single_message(msg)
+        if msg.get("MediaUrl0"):
+            message+=self.prepare_single_message(msg)
+        else:
+            for h in history:
+                message+=self.prepare_single_message(h)
+            message+=self.prepare_single_message(msg)
         return message
 
 
@@ -110,19 +125,32 @@ class ResponseSuggestor:
 
         messages = self.prepare_llm_message(msg, history)
 
-        print(messages)
 
+        # response = client.beta.chat.completions.parse(
+        #         model="gpt-4o-mini",
+        #         messages=messages,
+        #         max_tokens=500, 
+        #         response_format = ChatSuggestions,
+        #         temperature=0.9,           # Controls randomness (0 to 1)
+        #         top_p=0.9,  
+        #     )
+        # response = response.choices[0].message.parsed
+        
+        # return '- '+response.suggestion1 + '\n\n- ' + response.suggestion2 + '\n\n- ' + response.suggestion3  
+
+        print(messages)
         response = client.beta.chat.completions.parse(
-                model="gpt-4o-mini",
+                model="claude-3-7-sonnet-20250219",
                 messages=messages,
                 max_tokens=500, 
-                response_format = ChatSuggestions,
+                # response_format = ChatSuggestions,
                 temperature=0.9,           # Controls randomness (0 to 1)
                 top_p=0.9,  
             )
-        response = response.choices[0].message.parsed
-        
-        return '- '+response.suggestion1 + '\n\n- ' + response.suggestion2 + '\n\n- ' + response.suggestion3  
+        # response = response.choices[0].message.parsed
+        # return '- (Sweet): '+response.suggestion1.replace('(Sweet)', '') + '\n\n- (Cool): ' + response.suggestion2.replace('(Cool)', '') + '\n\n- (Spicy): ' + response.suggestion3.replace('(Spicy)', '')
+
+        return response.choices[0].message.content
 
 
 class TranscribeChat:

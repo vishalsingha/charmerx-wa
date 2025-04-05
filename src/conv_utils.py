@@ -9,15 +9,22 @@ trancribe = TranscribeChat()
 
 class ChatConversationManager:
     def __init__(self):
-        self.paid_contacts = ["918175847395", "919507899149", "918290650000" "919754532490"]
-        self.unpaid_user_template = "Hey there! CharmerX is all about helping you charm your way to epic dates, but our magic’s reserved for our awesome paid crew. Want to level up your dating game with killer lines? Pop over to charmerx.com to join the fun or learn more—we’d love to have you on board!"
+        self.paid_contacts = ['918175847395', '919507899149', '918290650000']
+        self.unpaid_user_template = '''Welcome to CharmerX, your WhatsApp rizz assistant. 
+Here are some of the things you can do with the agent. 
+1. Take a screenshot of a dating profile and ask it to generate a customized opening message.
+2. Take a screenshot of an ongoing conversation and ask it to generate the next text from your side. 
+3. Forward it a message you got from your interest and ask it for a response. 
+
+To get started, Sign Up for an account at https://charmerx.com
+Happy Rizzing !'''
 
     def is_valid_contact(self, msg):
         sender = msg.get('From') 
         curr_number = sender.replace('whatsapp:+', '')
         if curr_number in self.paid_contacts:
             return True
-        return True
+        return False
     
     def validate_img_quality(self, base64img):
         if base64img is None:
