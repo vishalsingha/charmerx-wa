@@ -1,8 +1,7 @@
 import os
 from openai import OpenAI
 from pydantic import BaseModel, Field
-from system import system_prompt, system_prompt1, grok_system_prompt
-from mistralai import Mistral
+from system import grok_system_prompt
 
 
 # Set your OpenAI API key here
@@ -12,20 +11,45 @@ client = OpenAI(api_key = API_KEY, base_url="https://api.anthropic.com/v1/")
 
 response_type = '''
 Output Format : 
-- (Sweet) : Craft a short, witty, and engaging response that directly references details from the screenshot/text. Use a mix of playfulness, humour, sarcasm, teasing, or cleverness to make it feel personal and engaging.</sweet_response>
-- (Cool) : Continue the interaction with a short response that builds on the previous statement naturally. Possible tones: playful, teasing, flirty, clever. Incorporate elements of curiosity, surprise, or challenge.</cool_response>
-- (Spicy) : Craft an attractive, charming, and concise reply that smoothly transitions the conversation towards a date or an engaging new topic. Use a mix of humor, intrigue, or confident charm to make the shift feel effortless and exciting.  \n\n- If the moment feels right, seamlessly incorporate a flirty yet natural ask-out.  \n- If not, initiate a fresh topic with a playful or intriguing hook that keeps the conversation flowing.  \n- Keep it short, clever, and engaging—avoid forced or overly generic transitions.</spicy_response>
-- (CharmerX) Best replies possibles combining all the above responses. 
+<think>thinkng here . Keep thnkng short and to the point<think>
+- (Sweet) : Craft a short, witty, and engaging response that directly references details from the screenshot/text. Use a mix of playfulness, humour, sarcasm, teasing, or cleverness to make it feel personal and engaging.
+- (Cool) : Continue the interaction with a short response that builds on the previous statement naturally. Possible tones: playful, teasing, flirty, clever. Incorporate elements of curiosity, surprise, or challenge.
+- (Spicy) : Craft an attractive, charming, and concise reply that smoothly transitions the conversation towards a date or an engaging new topic. Use a mix of humor, intrigue, or confident charm to make the shift feel effortless and exciting.  \n\n- If the moment feels right, seamlessly incorporate a flirty yet natural ask-out.  \n- If not, initiate a fresh topic with a playful or intriguing hook that keeps the conversation flowing.  \n- Keep it short, clever, and engaging—avoid forced or overly generic transitions.
+- (CharmerX) Craft a short and best reply possibles combining all the above responses. 
 
 Don't output anything other than this.
 '''
 
 
 
+import requests
+from PIL import Image
+from io import BytesIO
+import base64
+
+def process_image_from_url(url):
+    # Step 1: Get image from URL
+    response = requests.get(url)
+    response.raise_for_status()
+    img = Image.open(BytesIO(response.content))
+
+    # Step 2: Resize to half dimensions (changing aspect ratio)
+    new_size = (img.width // 2, img.height // 2)
+    img_resized = img.resize(new_size)
+
+    # Step 3: Convert to base64 using original format
+    format = img.format if img.format else 'JPEG'  # Default to JPEG if format not detected
+    buffered = BytesIO()
+    img_resized.save(buffered, format=format)
+    img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    return img_base64
+
+
 
 class ResponseSuggestor:
     def __init__(self):
-        self.system = system_prompt1
+        self.system = grok_system_prompt
 
     def prepare_single_message(self, msg):
         content = []
@@ -43,7 +67,7 @@ class ResponseSuggestor:
 
     def prepare_llm_message(self, msg, history):
 
-        message = [{"role" : "system", "content" : grok_system_prompt + f'\n\n{response_type}'}]
+        message = [{"role" : "system", "content" : self.system + f'\n\n{response_type}'}]
 
 
         if msg.get("MediaUrl0"):
@@ -71,5 +95,6 @@ class ResponseSuggestor:
                 temperature=0.9,           # Controls randomness (0 to 1)
                 top_p=0.9,  
             )
+        print(response)
         return response.choices[0].message.content
 

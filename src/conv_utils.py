@@ -1,11 +1,10 @@
 
 from whatsapp_utils import WhatsappUtils
-from llm_utils import ResponseSuggestor, TranscribeChat
+from llm_utils import ResponseSuggestor
 
 
 wa_utils = WhatsappUtils()
 response_suggestor = ResponseSuggestor()
-trancribe = TranscribeChat()
 
 class ChatConversationManager:
     def __init__(self):
@@ -47,8 +46,6 @@ Happy Rizzing !'''
             
             if media_url:
                 base64img = wa_utils.save_media(msg)
-                transcript = trancribe.get_transcript(base64img)
-                msg["transcript"] = transcript
             
             suggestions = response_suggestor.get_chat_suggestions(msg, history)
 
